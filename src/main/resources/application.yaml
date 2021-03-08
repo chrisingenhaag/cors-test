@@ -1,0 +1,25 @@
+customservice:
+  service:
+    uri: https://reqres.in
+
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: test
+          uri: ${customservice.service.uri}
+          predicates:
+            - Path=/**
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          "[/**]":
+            allowedOrigins: "https://www.example.com"
+            allowedHeaders: "*"
+            allowCredentials: true
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
