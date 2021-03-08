@@ -12,14 +12,10 @@ spring:
           predicates:
             - Path=/**
       globalcors:
-        add-to-simple-url-handler-mapping: true
         cors-configurations:
           "[/**]":
             allowedOrigins: "https://www.example.com"
-            allowedHeaders: "*"
+            allowedHeaders: "X-Allowed-Header"
             allowCredentials: true
             allowedMethods:
               - GET
-              - POST
-              - PUT
-              - DELETE

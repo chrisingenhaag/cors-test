@@ -34,7 +34,52 @@ public class CorsConfigurationTest {
   }
 
   @Test
-  public void corsHeadersShouldBeApplied() {
+  public void corsShouldAllowPreflightRequests() {
+    webTestClient.options()
+        .uri("/api/test")
+        .header("Origin", "https://www.example.com")
+        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "X-Allowed-Header")
+        .exchange()
+        .expectStatus().isOk()
+        .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)
+        .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS)
+        .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS)
+        .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS);
+  }
+
+  @Test
+  public void corsShouldPreventPreflightRequestsWithInvalidHeader() {
+    webTestClient.options()
+        .uri("/api/test")
+        .header("Origin","https://www.example.com")
+        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+        .exchange()
+        .expectStatus().isForbidden();
+  }
+
+  @Test
+  public void corsShouldPreventPreflightRequestsWithInvalidOrigin() {
+
+    webTestClient.options()
+        .uri("/api/test")
+        .header("Origin","https://invaliddomain.com")
+        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+        .exchange()
+        .expectStatus().isForbidden();
+  }
+
+  @Test
+  public void corsShouldPreventSimpleCrossOriginRequests() {
+    webTestClient.get()
+        .uri("/api/test")
+        .header("Origin","http://calledfromunknowndomain.com")
+        .exchange()
+        .expectStatus().isForbidden();
+  }
+
+  @Test
+  public void corsShouldAllowSameDomainRequestsAndRespondWithHeaders() {
     mockServerClient.when(request().withMethod("GET")
         .withPath("/api/test"))
         .respond(response()
@@ -44,12 +89,12 @@ public class CorsConfigurationTest {
 
     webTestClient.get()
         .uri("/api/test")
+        .header("Origin","https://www.example.com")
         .exchange()
         .expectStatus().isOk()
         .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)
-        .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS)
-        .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS)
         .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS);
   }
+
 
 }
